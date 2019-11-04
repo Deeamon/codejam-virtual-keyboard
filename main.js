@@ -57,17 +57,32 @@ class Button {
     return this._buttonSize;
   }
 
+  get id() {
+    return this._id;
+  }
+
+  get keyCode() {
+    return this._keyCode;
+  }
+
   constructor(
     buttonContent,
+    keyCode,
     isSupport = false,
-    buttonSize = new ButtonSize(1)
+    buttonSize = new ButtonSize(1),
   ) {
+    // TODO: find best way to generate id
+    this._id = `f${(+new Date).toString(16)}${Math.round(Math.random() * 100000000)}`;
+    this._keyCode = keyCode;
     this._buttonContent = buttonContent;
     this._isSupport = isSupport;
     this._buttonSize = buttonSize;
+
   }
+
 }
 
+// class(key) =>  key.key => getbtnbycontent => render(id) => anim
 class KeyboardRow {
 
   get buttons() {
@@ -116,15 +131,33 @@ class Keyboard {
     this._row4 = row4;
     this._row5 = row5;
   }
+
+  getButton(id) {
+    return this._row1.buttons.find(button => button.id === id)
+      ||
+      this._row2.buttons.find(button => button.id === id)
+      ||
+      this._row3.buttons.find(button => button.id === id)
+      ||
+      this._row4.buttons.find(button => button.id === id)
+      ||
+      this._row5.buttons.find(button => button.id === id);
+  }
+
+  getButtonId(keyCode) {
+    return this._row1.buttons.find(button => button.keyCode === keyCode)
+      ||
+      this._row2.buttons.find(button => button.keyCode === keyCode)
+      ||
+      this._row3.buttons.find(button => button.keyCode === keyCode)
+      ||
+      this._row4.buttons.find(button => button.keyCode === keyCode)
+      ||
+      this._row5.buttons.find(button => button.keyCode === keyCode);
+  }
 }
 
 class LanguageProvider {
-  // set isCurrentEn(val) {
-  //   return this._languageProvider = val;
-  // }
-  // get isCurrentEn() {
-  //   return this._languageProvider;
-  // }
   get isCurrentEn() {
     return true;
   }
@@ -135,11 +168,19 @@ class Render {
     this._languageProvider = languageProvider;
   }
 
-  render(keyboard) {
+  render(keyboard, callback) {
     this._renderTextarea();
 
     const keyboardContainer = document.createElement('section');
     keyboardContainer.className = 'keyboard';
+
+    keyboardContainer.addEventListener('click', (event) => {
+      const btn = event.target.closest('button');
+      if (!btn) { return };
+      this.animateButton(btn);
+
+      callback(btn.id);
+    });
 
     const olRef = document.createElement('ol');
 
@@ -153,13 +194,28 @@ class Render {
 
     document.body.append(keyboardContainer);
   }
-  _renderTextarea(){
-    const textareaRef =  document.createElement('textarea');
+
+  fillTextarea(letter) {
+    if (!this._textareaRef) {
+      throw new Error('render method should have been called before');
+    }
+
+    this._textareaRef.value += letter;
+  }
+
+  animateButton(btn) {
+    btn.classList.add('button--active');
+    setTimeout(function () { btn.classList.remove('button--active') }, 200);
+  };
+
+  _renderTextarea() {
+    const textareaRef = document.createElement('textarea');
     textareaRef.className = 'textarea';
     textareaRef.cols = '60';
     textareaRef.rows = '6';
 
     document.body.append(textareaRef);
+    this._textareaRef = textareaRef;
   }
 
   _renderRow(keyboardContainer, keyboardRow) {
@@ -175,26 +231,27 @@ class Render {
 
   _renderButton(
     buttonContainer,
-    { buttonContent, isSupport, buttonSize}
+    { buttonContent, isSupport, buttonSize, id }
   ) {
     const buttonRef = document.createElement('button');
     buttonRef.className = 'button';
+    buttonRef.id = id;
 
     const supContentRef = document.createElement('div');
     supContentRef.className = 'button__sup-content';
     supContentRef.innerText = this._languageProvider.isCurrentEn
       ? buttonContent.enSecondarySymbol
       : buttonContent.ruSecondarySymbol;
-      buttonRef.append(supContentRef);
+    buttonRef.append(supContentRef);
 
     const contentRef = document.createElement('div');
     contentRef.className = 'button__content';
     contentRef.innerText = this._languageProvider.isCurrentEn
       ? buttonContent.enSymbol
       : buttonContent.ruSymbol;
-      buttonRef.append(contentRef);
+    buttonRef.append(contentRef);
 
-    if(isSupport) {
+    if (isSupport) {
       buttonRef.classList.add('button--support');
     }
 
@@ -206,6 +263,29 @@ class Render {
 
 }
 
+class TextareaContentManager {
+  constructor(languageProvider) {
+    this._languageProvider = languageProvider;
+  }
+
+  provideContent({ buttonContent }) {
+    return this._languageProvider.isCurrentEn
+      ? buttonContent.enSymbol
+      : buttonContent.ruSymbol;
+  }
+}
+
+class KeyPressManager {
+  constructor(keyboard) {
+    this._keyboard = keyboard;
+  }
+  
+  handeleKeyPress(callback){
+      //doc.keyup => targ .key code => get id() 
+      //callback <= as render
+  }
+
+}
 
 class App {
 
@@ -223,6 +303,7 @@ class App {
               'ё',
               '~'
             ),
+            'Backquote',
             true
           ),
           new Button(
@@ -671,41 +752,27 @@ class App {
 
     this._languageProvider = new LanguageProvider();
     this._render = new Render(this._languageProvider);
+    this._textareaContentManager = new TextareaContentManager(this._languageProvider);
+    this._keyPressManager = new KeyPressManager(this._keyboard);
 
   }
 
-  execute(){
-    this._render.render(this._keyboard);
+  execute() {
+    this._render.render(this._keyboard, (id) => {
+
+      this._render.fillTextarea(
+        this._textareaContentManager.provideContent(
+          this._keyboard.getButton(id)
+          )
+      );
+      this._keyPressManager.handleKeyPress( (id) =>{
+        this._render.animateButton(id);
+      });
+    });
   }
 }
 
 const app = new App();
 app.execute();
 
-//Button animation
 
-document.querySelector('.keyboard').addEventListener('click', function(event){
-	const btn = event.target.closest('button');
-	if(!btn){return};
-  if(!document.querySelector('.keyboard').contains(btn)){return};
-  animation(btn);
-})
-
-function animation(btn) {
-  btn.classList.add('button--active'); 
-  setTimeout(function(){btn.classList.remove('button--active')}, 200); 
-}
-
-// Switch Language
-document.addEventListener('keydown', function(event) {
-  if (event.code == 'ControlLeft' && "AltLeft") {
-      const lang = new LanguageProvider();
-      // lang.isCurrentEn = false;
-      lang.isCurrentEn = true;
-      // lang.isCurrentEn;
-    alert('Отменить!')
-  }
-});
-
-// const app = new App();
-// app.execute();
