@@ -58,7 +58,7 @@ class Button {
   }
 
   get id() {
-    return this._id;
+    return this._keyCode;
   }
 
   get keyCode() {
@@ -71,8 +71,6 @@ class Button {
     isSupport = false,
     buttonSize = new ButtonSize(1),
   ) {
-    // TODO: find best way to generate id
-    this._id = `f${(+new Date).toString(16)}${Math.round(Math.random() * 100000000)}`;
     this._keyCode = keyCode;
     this._buttonContent = buttonContent;
     this._isSupport = isSupport;
@@ -144,7 +142,7 @@ class Keyboard {
       this._row5.buttons.find(button => button.id === id);
   }
 
-  getButtonId(keyCode) {
+  getButtonById(keyCode) {
     return this._row1.buttons.find(button => button.keyCode === keyCode)
       ||
       this._row2.buttons.find(button => button.keyCode === keyCode)
@@ -204,8 +202,10 @@ class Render {
   }
 
   animateButton(btn) {
-    btn.classList.add('button--active');
-    setTimeout(function () { btn.classList.remove('button--active') }, 200);
+    document.querySelector(`#${btn.id}`).classList.add('button--active');
+    setTimeout(function () { document.querySelector(`#${btn.id}`).classList.remove('button--active') }, 200);
+    // btn.classList.add('button--active');
+    // setTimeout(function () { btn.classList.remove('button--active') }, 200);
   };
 
   _renderTextarea() {
@@ -279,12 +279,16 @@ class KeyPressManager {
   constructor(keyboard) {
     this._keyboard = keyboard;
   }
-  
-  handeleKeyPress(callback){
-      //doc.keyup => targ .key code => get id() 
-      //callback <= as render
-  }
 
+  handleKeyPress(callback) {
+    document.addEventListener('keydown', (event) => {
+      const keyCode = event.code; 
+      event.stopPropagation();
+      event.preventDefault();    
+      const button = this._keyboard.getButtonById(keyCode);
+      callback(button);
+    })
+  }
 }
 
 class App {
@@ -312,7 +316,8 @@ class App {
               '1',
               '!',
               '!'
-            )
+            ),
+            'Digit1'
           ),
           new Button(
             new ButtonContent(
@@ -320,7 +325,8 @@ class App {
               '2',
               '@',
               '"'
-            )
+            ),
+            'Digit2'
           ),
           new Button(
             new ButtonContent(
@@ -328,7 +334,8 @@ class App {
               '3',
               '#',
               '№'
-            )
+            ),
+            'Digit3'
           ),
           new Button(
             new ButtonContent(
@@ -336,7 +343,8 @@ class App {
               '4',
               '$',
               ';'
-            )
+            ),
+            'Digit4'
           ),
           new Button(
             new ButtonContent(
@@ -344,7 +352,8 @@ class App {
               '5',
               '%',
               '%'
-            )
+            ),
+            'Digit5'
           ),
           new Button(
             new ButtonContent(
@@ -352,7 +361,8 @@ class App {
               '6',
               ':',
               '^'
-            )
+            ),
+            'Digit6'
           ),
           new Button(
             new ButtonContent(
@@ -360,7 +370,8 @@ class App {
               '7',
               '?',
               '&'
-            )
+            ),
+            'Digit7'
           ),
           new Button(
             new ButtonContent(
@@ -368,7 +379,8 @@ class App {
               '8',
               '*',
               '*'
-            )
+            ),
+            'Digit8'
           ),
           new Button(
             new ButtonContent(
@@ -376,13 +388,8 @@ class App {
               '9',
               '(',
               '('
-            )
-          ),
-          new Button(
-            new ButtonContent(
-              'p',
-              'з'
-            )
+            ),
+            'Digit9'
           ),
           new Button(
             new ButtonContent(
@@ -390,7 +397,8 @@ class App {
               '0',
               ')',
               ')'
-            )
+            ),
+            'Digit0'
           ),
           new Button(
             new ButtonContent(
@@ -398,7 +406,8 @@ class App {
               '-',
               '_',
               '_'
-            )
+            ),
+            'Minus'
           ),
           new Button(
             new ButtonContent(
@@ -406,12 +415,14 @@ class App {
               '=',
               '+',
               '+'
-            )
+            ),
+            'Equal'
           ),
           new Button(
             new ButtonContent(
               'Backspace'
             ),
+            'Backspace',
             true,
             new ButtonSize(6)
           ),
@@ -423,6 +434,7 @@ class App {
             new ButtonContent(
               'tab'
             ),
+            'Tab',
             true,
             new ButtonSize(3)
           ),
@@ -430,73 +442,85 @@ class App {
             new ButtonContent(
               'q',
               'й'
-            )
+            ),
+            'KeyQ'
           ),
           new Button(
             new ButtonContent(
               'w',
               'ц'
-            )
+            ),
+            'KeyW'
           ),
           new Button(
             new ButtonContent(
               'e',
               'у'
-            )
+            ),
+            'KeyE'
           ),
           new Button(
             new ButtonContent(
               'r',
               'к'
-            )
+            ),
+            'KeyR'
           ),
           new Button(
             new ButtonContent(
               't',
               'е'
-            )
+            ),
+            'KeyT'
           ),
           new Button(
             new ButtonContent(
               'y',
               'н'
-            )
+            ),
+            'KeyY'
           ),
           new Button(
             new ButtonContent(
               'u',
               'г'
-            )
+            ),
+            'KeyU'
           ),
           new Button(
             new ButtonContent(
               'i',
               'ш'
-            )
+            ),
+            'KeyI'
           ),
           new Button(
             new ButtonContent(
               'o',
               'щ'
-            )
+            ),
+            'KeyO'
           ),
           new Button(
             new ButtonContent(
               'p',
               'з'
-            )
+            ),
+            'KeyP'
           ),
           new Button(
             new ButtonContent(
               '[',
               'х'
-            )
+            ),
+            'BracketLeft'
           ),
           new Button(
             new ButtonContent(
               ']',
               'ъ'
-            )
+            ),
+            'BracketRight'
           ),
           new Button(
             new ButtonContent(
@@ -504,12 +528,14 @@ class App {
               '\\',
               '\/',
               '\/',
-            )
+            ),
+            'Backslash'
           ),
           new Button(
             new ButtonContent(
               'del'
             ),
+            'Delete',
             true,
             new ButtonSize(2)
           ),
@@ -521,6 +547,7 @@ class App {
             new ButtonContent(
               'Caps Lock'
             ),
+            'CapsLock',
             true,
             new ButtonSize(6)
           ),
@@ -528,72 +555,84 @@ class App {
             new ButtonContent(
               'a',
               'ф'
-            )
+            ),
+            'KeyA'
           ),
           new Button(
             new ButtonContent(
               's',
               'ы'
-            )
+            ),
+            'KeyS'
           ),
           new Button(
             new ButtonContent(
               'd',
               'в'
-            )
+            ),
+            'KeyD'
           ),
           new Button(
             new ButtonContent(
               'f',
               'а'
-            )
+            ),
+            'KeyF'
           ),
           new Button(
             new ButtonContent(
               'g',
               'п'
-            )
+            ),
+            'KeyG'
           ),
           new Button(
             new ButtonContent(
               'h',
               'р'
-            )
+            ),
+            'KeyH'
           ),
           new Button(
             new ButtonContent(
               'j',
               'о'
-            )
+            ),
+            'KeyJ'
           ),
           new Button(
             new ButtonContent(
               'k',
               'л'
-            )
+            ),
+            'KeyK'
           ),
           new Button(
             new ButtonContent(
               'l',
               'д'
-            )
+            ),
+            'KeyL'
           ),
           new Button(
             new ButtonContent(
               ';',
               'ж'
-            )
+            ),
+            'Semicolon'
           ),
           new Button(
             new ButtonContent(
               '\'',
               'э'
-            )
+            ),
+            'Quote'
           ),
           new Button(
             new ButtonContent(
               'enter'
             ),
+            'Enter',
             true,
             new ButtonSize(5)
           )
@@ -605,83 +644,97 @@ class App {
             new ButtonContent(
               'Shift'
             ),
+            'ShiftLeft',
             true,
             new ButtonSize(6)
           ),
           new Button(
             new ButtonContent(
               '\\'
-            )
+            ),
+            'Backslash'
           ),
           new Button(
             new ButtonContent(
               'z',
               'я'
-            )
+            ),
+            'KeyZ'
           ),
           new Button(
             new ButtonContent(
               'x',
               'ч'
-            )
+            ),
+            'KeyX'
           ),
           new Button(
             new ButtonContent(
               'c',
               'с'
-            )
+            ),
+            'KeyC'
           ),
           new Button(
             new ButtonContent(
               'v',
               'м'
-            )
+            ),
+            'KeyV'
           ),
           new Button(
             new ButtonContent(
               'b',
               'и'
-            )
+            ),
+            'KeyB'
           ),
           new Button(
             new ButtonContent(
               'n',
               'т'
-            )
+            ),
+            'KeyN'
           ),
           new Button(
             new ButtonContent(
               'm',
               'ь'
-            )
+            ),
+            'KeyM'
           ),
           new Button(
             new ButtonContent(
               '.',
               'б'
-            )
+            ),
+            'Comma'
           ),
           new Button(
             new ButtonContent(
               ',',
               'ю'
-            )
+            ),
+            'Period'
           ),
           new Button(
             new ButtonContent(
               '\/'
-            )
+            ),
+            'Slash'
           ),
           new Button(
             new ButtonContent(
               '▲'
             ),
+            'ArrowUp',
             true
           ),
           new Button(
             new ButtonContent(
               'Shift'
             ),
+            'ShiftRight',
             true
           )
         ]
@@ -692,6 +745,7 @@ class App {
             new ButtonContent(
               'Ctrl'
             ),
+            'ControlLeft',
             true,
             new ButtonSize(4)
           ),
@@ -699,18 +753,21 @@ class App {
             new ButtonContent(
               'Win'
             ),
+            'MetaLeft',
             true
           ),
           new Button(
             new ButtonContent(
               'Alt'
             ),
+            'AltLeft',
             true
           ),
           new Button(
             new ButtonContent(
-              ''
+              ' '
             ),
+            'Space',
             true,
             new ButtonSize(7)
           ),
@@ -718,6 +775,7 @@ class App {
             new ButtonContent(
               'Alt'
             ),
+            'AltRight',
             true,
             new ButtonSize(1)
           ),
@@ -725,6 +783,7 @@ class App {
             new ButtonContent(
               'Ctrl'
             ),
+            'ControlRight',
             true,
             new ButtonSize(4)
           ),
@@ -732,18 +791,21 @@ class App {
             new ButtonContent(
               '◄'
             ),
+            'ArrowLeft',
             true
           ),
           new Button(
             new ButtonContent(
               '▼'
             ),
+            'ArrowDown',
             true
           ),
           new Button(
             new ButtonContent(
               '►'
             ),
+            'ArrowRight',
             true
           )
         ]
@@ -759,15 +821,20 @@ class App {
 
   execute() {
     this._render.render(this._keyboard, (id) => {
-
+      console.log(1);
+      
       this._render.fillTextarea(
         this._textareaContentManager.provideContent(
           this._keyboard.getButton(id)
-          )
+        )
       );
-      this._keyPressManager.handleKeyPress( (id) =>{
-        this._render.animateButton(id);
-      });
+    });
+
+    this._keyPressManager.handleKeyPress((button) => {
+      console.log(2);
+      
+      this._render.animateButton(button);
+      this._render.fillTextarea(this._textareaContentManager.provideContent(button));
     });
   }
 }
